@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Cat, Paw, Heart, Eye, Ear, MessageCircle, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Sun, Moon } from "lucide-react";
+import { Cat, Paw, Heart, Eye, Ear, MessageCircle, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Sun, Moon, ArrowRight } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const catCharacteristics = [
   { icon: <Paw className="h-6 w-6" />, text: "Excellent hunters with sharp claws and teeth" },
@@ -31,6 +33,7 @@ const catImages = [
 const Index = () => {
   const [funFact, setFunFact] = useState("Cats sleep for about 70% of their lives.");
   const [isFlipped, setIsFlipped] = useState(false);
+  const [activeSection, setActiveSection] = useState(0);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -61,8 +64,26 @@ const Index = () => {
     localStorage.setItem("theme", newTheme);
   };
 
+  const sections = ["Home", "Characteristics", "Gallery", "Breeds", "Fun Facts"];
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gradient-to-b from-purple-100 to-pink-100"}`}>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-opacity-80 backdrop-blur-md bg-purple-600 text-white p-4">
+        <ul className="flex justify-center space-x-6">
+          {sections.map((section, index) => (
+            <li key={index}>
+              <Button
+                variant="ghost"
+                className={`text-white ${activeSection === index ? 'bg-purple-700' : ''}`}
+                onClick={() => setActiveSection(index)}
+              >
+                {section}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       <div className="relative h-screen bg-cover bg-center bg-fixed" style={{backgroundImage: `url(${catImages[0]})`}}>
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <motion.h1 
@@ -80,17 +101,32 @@ const Index = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 0.5 }}
-        className="max-w-4xl mx-auto px-4 py-12"
+        className="max-w-4xl mx-auto px-4 py-24"
       >
-        <p className="text-xl mb-8 text-center">
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-xl mb-12 text-center"
+        >
           Cats are fascinating creatures that have been domesticated for thousands of years. They are known for their independence, agility, and affectionate nature.
-        </p>
+        </motion.p>
 
-        <h2 className="text-4xl font-semibold mb-8 text-center">Characteristics of Cats</h2>
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-4xl font-semibold mb-8 text-center"
+        >
+          Characteristics of Cats
+        </motion.h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {catCharacteristics.map((char, index) => (
             <motion.div 
               key={index} 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
               className={`p-6 rounded-lg shadow-lg flex items-center transition-all duration-300 ${theme === "dark" ? "bg-gray-800 hover:bg-gray-700" : "bg-white hover:bg-purple-100"}`}
               whileHover={{ scale: 1.05 }}
             >
@@ -100,20 +136,39 @@ const Index = () => {
           ))}
         </div>
 
-        <h2 className="text-4xl font-semibold mb-8 text-center">Cat Gallery</h2>
-        <div className="grid grid-cols-2 gap-4 mb-16">
-          {catImages.map((img, index) => (
-            <motion.img 
-              key={index}
-              src={img}
-              alt={`Cat ${index + 1}`}
-              className="w-full h-64 object-cover rounded-lg shadow-lg"
-              whileHover={{ scale: 1.05 }}
-            />
-          ))}
-        </div>
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl font-semibold mb-8 text-center"
+        >
+          Cat Gallery
+        </motion.h2>
+        <Carousel className="mb-16">
+          <CarouselContent>
+            {catImages.map((img, index) => (
+              <CarouselItem key={index}>
+                <motion.img 
+                  src={img}
+                  alt={`Cat ${index + 1}`}
+                  className="w-full h-96 object-cover rounded-lg shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
 
-        <h2 className="text-4xl font-semibold mb-8 text-center">Popular Cat Breeds</h2>
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl font-semibold mb-8 text-center"
+        >
+          Popular Cat Breeds
+        </motion.h2>
         <Accordion type="single" collapsible className="mb-16">
           {catBreeds.map((breed, index) => (
             <AccordionItem key={index} value={`item-${index}`}>
@@ -123,31 +178,45 @@ const Index = () => {
           ))}
         </Accordion>
 
-        <h2 className="text-4xl font-semibold mb-8 text-center">Cat Fun Fact</h2>
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl font-semibold mb-8 text-center"
+        >
+          Cat Fun Fact
+        </motion.h2>
         <Card className={`mb-16 ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
           <CardContent className="p-6">
-            <div className={`flip-card ${isFlipped ? 'flipped' : ''}`}>
-              <div className="flip-card-inner">
-                <div className="flip-card-front">
-                  <p className="text-xl mb-4">{funFact}</p>
-                </div>
-                <div className="flip-card-back">
-                  <p className="text-xl mb-4">{funFact}</p>
-                </div>
-              </div>
-            </div>
-            <button
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={funFact}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="text-xl mb-4"
+              >
+                {funFact}
+              </motion.div>
+            </AnimatePresence>
+            <Button
               onClick={generateFunFact}
-              className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded mt-4"
+              className="bg-purple-500 hover:bg-purple-600 text-white font-bold"
             >
-              Generate New Fact
-            </button>
+              Generate New Fact <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </CardContent>
         </Card>
 
-        <p className="text-xl italic text-center mb-16">
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-xl italic text-center mb-16"
+        >
           Whether you're a cat owner or just an admirer, these furry friends continue to captivate us with their charm and mystery.
-        </p>
+        </motion.p>
       </motion.div>
 
       <footer className={`py-12 ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
@@ -169,7 +238,7 @@ const Index = () => {
               <h3 className="text-xl font-semibold mb-4">Newsletter</h3>
               <p className="mb-2">Stay updated with our latest cat facts and tips!</p>
               <input type="email" placeholder="Enter your email" className="w-full p-2 mb-2 rounded" />
-              <button className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded w-full">Subscribe</button>
+              <Button className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold">Subscribe</Button>
             </div>
           </div>
           <div className="flex justify-between items-center border-t pt-8">
@@ -183,12 +252,14 @@ const Index = () => {
         </div>
       </footer>
 
-      <button
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={toggleTheme}
         className="fixed bottom-4 right-4 bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-full shadow-lg"
       >
         {theme === "dark" ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
-      </button>
+      </motion.button>
     </div>
   );
 };
