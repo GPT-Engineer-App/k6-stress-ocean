@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Cat, Paw, Heart, Eye, Ear, MessageCircle, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Sun, Moon, ArrowRight, ArrowUp } from "lucide-react";
+import { Cat, Paw, Heart, Eye, Ear, MessageCircle, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Sun, Moon, ArrowRight, ArrowUp, Star } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
@@ -8,21 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInView } from "react-intersection-observer";
+import { Progress } from "@/components/ui/progress";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const catCharacteristics = [
-  { icon: <Paw className="h-6 w-6" />, text: "Excellent hunters with sharp claws and teeth" },
-  { icon: <Heart className="h-6 w-6" />, text: "Flexible bodies and quick reflexes" },
-  { icon: <Eye className="h-6 w-6" />, text: "Keen senses, especially night vision" },
-  { icon: <Ear className="h-6 w-6" />, text: "Exceptional hearing abilities" },
-  { icon: <MessageCircle className="h-6 w-6" />, text: "Communicate through vocalizations and body language" },
+  { icon: <Paw className="h-6 w-6" />, text: "Excellent hunters with sharp claws and teeth", rating: 95 },
+  { icon: <Heart className="h-6 w-6" />, text: "Flexible bodies and quick reflexes", rating: 90 },
+  { icon: <Eye className="h-6 w-6" />, text: "Keen senses, especially night vision", rating: 98 },
+  { icon: <Ear className="h-6 w-6" />, text: "Exceptional hearing abilities", rating: 97 },
+  { icon: <MessageCircle className="h-6 w-6" />, text: "Communicate through vocalizations and body language", rating: 92 },
 ];
 
 const catBreeds = [
-  { name: "Siamese", description: "Known for their distinctive color points and vocal nature." },
-  { name: "Persian", description: "Recognized for their long, luxurious coat and flat face." },
-  { name: "Maine Coon", description: "One of the largest domestic cat breeds with a gentle temperament." },
-  { name: "British Shorthair", description: "Characterized by their round face and dense, plush coat." },
-  { name: "Scottish Fold", description: "Famous for their unique folded ears and owl-like appearance." },
+  { name: "Siamese", description: "Known for their distinctive color points and vocal nature.", popularity: 4.5 },
+  { name: "Persian", description: "Recognized for their long, luxurious coat and flat face.", popularity: 4.2 },
+  { name: "Maine Coon", description: "One of the largest domestic cat breeds with a gentle temperament.", popularity: 4.7 },
+  { name: "British Shorthair", description: "Characterized by their round face and dense, plush coat.", popularity: 4.3 },
+  { name: "Scottish Fold", description: "Famous for their unique folded ears and owl-like appearance.", popularity: 4.1 },
 ];
 
 const catImages = [
@@ -39,6 +41,7 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { scrollY } = useScroll();
+  const [hoveredBreed, setHoveredBreed] = useState(null);
 
   const headerRef = useRef(null);
   const [headerInView] = useInView({
@@ -86,6 +89,18 @@ const Index = () => {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const renderStars = (rating) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <Star
+        key={index}
+        className={`h-4 w-4 ${
+          index < Math.floor(rating) ? "text-yellow-400" : "text-gray-300"
+        }`}
+        fill={index < Math.floor(rating) ? "currentColor" : "none"}
+      />
+    ));
   };
 
   return (
@@ -179,11 +194,15 @@ const Index = () => {
                 hidden: { opacity: 0, y: 20 },
                 visible: { opacity: 1, y: 0 }
               }}
-              className={`p-6 rounded-lg shadow-lg flex items-center transition-all duration-300 ${theme === "dark" ? "bg-gray-800 hover:bg-gray-700" : "bg-white hover:bg-purple-100"}`}
+              className={`p-6 rounded-lg shadow-lg flex flex-col transition-all duration-300 ${theme === "dark" ? "bg-gray-800 hover:bg-gray-700" : "bg-white hover:bg-purple-100"}`}
               whileHover={{ scale: 1.05 }}
             >
-              {char.icon}
-              <span className="ml-4">{char.text}</span>
+              <div className="flex items-center mb-4">
+                {char.icon}
+                <span className="ml-4 font-semibold">{char.text}</span>
+              </div>
+              <Progress value={char.rating} className="w-full" />
+              <span className="mt-2 text-sm text-right">{char.rating}%</span>
             </motion.div>
           ))}
         </motion.div>
@@ -248,11 +267,36 @@ const Index = () => {
         <Accordion type="single" collapsible className="mb-16">
           {catBreeds.map((breed, index) => (
             <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger>{breed.name}</AccordionTrigger>
-              <AccordionContent>{breed.description}</AccordionContent>
+              <AccordionTrigger
+                onMouseEnter={() => setHoveredBreed(breed)}
+                onMouseLeave={() => setHoveredBreed(null)}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span>{breed.name}</span>
+                  <div className="flex items-center">
+                    {renderStars(breed.popularity)}
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <p>{breed.description}</p>
+                <div className="mt-2 flex items-center">
+                  <span className="mr-2">Popularity:</span>
+                  {renderStars(breed.popularity)}
+                  <span className="ml-2">({breed.popularity.toFixed(1)})</span>
+                </div>
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
+        {hoveredBreed && (
+          <Tooltip>
+            <div className="bg-white p-4 rounded-lg shadow-lg">
+              <h3 className="text-lg font-semibold mb-2">{hoveredBreed.name}</h3>
+              <p>{hoveredBreed.description}</p>
+            </div>
+          </Tooltip>
+        )}
 
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
