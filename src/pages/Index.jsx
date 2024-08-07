@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
-import { Cat, Paw, Heart, Eye, Ear, MessageCircle, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Sun, Moon, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Cat, Paw, Heart, Eye, Ear, MessageCircle, ChevronDown, ChevronUp, Facebook, Twitter, Instagram, Sun, Moon, ArrowRight, ArrowUp } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useInView } from "react-intersection-observer";
 
 const catCharacteristics = [
   { icon: <Paw className="h-6 w-6" />, text: "Excellent hunters with sharp claws and teeth" },
@@ -35,12 +37,28 @@ const Index = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
   const { theme, setTheme } = useTheme();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const { scrollY } = useScroll();
+
+  const headerRef = useRef(null);
+  const [headerInView] = useInView({
+    threshold: 0.1,
+  });
+
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       setTheme(savedTheme);
     }
+
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const generateFunFact = () => {
@@ -66,9 +84,18 @@ const Index = () => {
 
   const sections = ["Home", "Characteristics", "Gallery", "Breeds", "Fun Facts"];
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === "dark" ? "bg-gray-900 text-white" : "bg-gradient-to-b from-purple-100 to-pink-100"}`}>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-opacity-80 backdrop-blur-md bg-purple-600 text-white p-4">
+      <motion.nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          headerInView ? 'bg-transparent' : 'bg-purple-600 bg-opacity-80 backdrop-blur-md'
+        } text-white p-4`}
+        style={{ opacity: headerInView ? opacity : 1 }}
+      >
         <ul className="flex justify-center space-x-6">
           {sections.map((section, index) => (
             <li key={index}>
@@ -82,19 +109,32 @@ const Index = () => {
             </li>
           ))}
         </ul>
-      </nav>
+      </motion.nav>
 
-      <div className="relative h-screen bg-cover bg-center bg-fixed" style={{backgroundImage: `url(${catImages[0]})`}}>
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div ref={headerRef} className="relative h-screen bg-cover bg-center bg-fixed overflow-hidden" style={{backgroundImage: `url(${catImages[0]})`}}>
+        <motion.div 
+          className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+        >
           <motion.h1 
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 1, delay: 0.5 }}
             className="text-6xl font-bold text-white mb-6 flex items-center"
           >
             <Cat className="mr-4 h-16 w-16" /> All About Cats
           </motion.h1>
-        </div>
+        </motion.div>
+        <motion.div 
+          className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1 }}
+        >
+          <ChevronDown className="h-12 w-12 text-white animate-bounce" />
+        </motion.div>
       </div>
 
       <motion.div 
@@ -120,13 +160,25 @@ const Index = () => {
         >
           Characteristics of Cats
         </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.1
+              }
+            }
+          }}
+        >
           {catCharacteristics.map((char, index) => (
             <motion.div 
               key={index} 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 }
+              }}
               className={`p-6 rounded-lg shadow-lg flex items-center transition-all duration-300 ${theme === "dark" ? "bg-gray-800 hover:bg-gray-700" : "bg-white hover:bg-purple-100"}`}
               whileHover={{ scale: 1.05 }}
             >
@@ -134,7 +186,7 @@ const Index = () => {
               <span className="ml-4">{char.text}</span>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
@@ -144,22 +196,46 @@ const Index = () => {
         >
           Cat Gallery
         </motion.h2>
-        <Carousel className="mb-16">
-          <CarouselContent>
-            {catImages.map((img, index) => (
-              <CarouselItem key={index}>
+        <Tabs defaultValue="carousel" className="mb-16">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="carousel">Carousel</TabsTrigger>
+            <TabsTrigger value="grid">Grid</TabsTrigger>
+          </TabsList>
+          <TabsContent value="carousel">
+            <Carousel>
+              <CarouselContent>
+                {catImages.map((img, index) => (
+                  <CarouselItem key={index}>
+                    <motion.img 
+                      src={img}
+                      alt={`Cat ${index + 1}`}
+                      className="w-full h-96 object-cover rounded-lg shadow-lg"
+                      whileHover={{ scale: 1.05 }}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </TabsContent>
+          <TabsContent value="grid">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {catImages.map((img, index) => (
                 <motion.img 
+                  key={index}
                   src={img}
                   alt={`Cat ${index + 1}`}
-                  className="w-full h-96 object-cover rounded-lg shadow-lg"
+                  className="w-full h-48 object-cover rounded-lg shadow-lg"
                   whileHover={{ scale: 1.05 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
                 />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
@@ -256,10 +332,26 @@ const Index = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={toggleTheme}
-        className="fixed bottom-4 right-4 bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-full shadow-lg"
+        className="fixed bottom-4 right-4 bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-full shadow-lg z-50"
       >
         {theme === "dark" ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
       </motion.button>
+
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={scrollToTop}
+            className="fixed bottom-4 left-4 bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-full shadow-lg z-50"
+          >
+            <ArrowUp className="h-6 w-6" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
